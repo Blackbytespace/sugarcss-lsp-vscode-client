@@ -5,3 +5,22 @@ src/**
 **/tsconfig.json
 **/*.map
 **/*.ts
+# Include essential files
+!out/**
+!assets/**
+!package.json
+!README.md
+!LICENSE.md
+!language-configuration.json
+# Exclude everything outside this directory more aggressively
+../**/*
+../../**/*
+../../../**/*
+****/**/*
+# Exclude system files
+**/.DS_Store
+**/.git/**
+# Exclude all node_modules except the language client
+**/node_modules/**
+node_modules/**
+!node_modules/vscode-languageclient/**

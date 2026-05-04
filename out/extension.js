@@ -6,18 +6,39 @@ const vscode_1 = require("vscode");
 const node_1 = require("vscode-languageclient/node");
 let client;
 function activate(context) {
-    // The server is implemented in node
-    const serverModule = require.resolve('@blackbyte/sugarcss-lsp-server/out/server.js');
+    // Try to find the server module in different locations
+    let serverModule;
+    try {
+        // First try to find it in the development environment (monorepo)
+        serverModule = require.resolve('@blackbyte/sugarcss-lsp-server/out/server.js');
+    }
+    catch (error) {
+        // If not found, try to use npx to run it (for published extension)
+        serverModule = 'npx';
+    }
     // If the extension is launched in debug mode then the debug server options are used
     // Otherwise the run options are used
-    const serverOptions = {
-        run: { module: serverModule, transport: node_1.TransportKind.ipc },
-        debug: {
-            module: serverModule,
-            transport: node_1.TransportKind.ipc,
-            options: { execArgv: ['--nolazy', '--inspect=6009'] },
-        },
-    };
+    const serverOptions = serverModule === 'npx'
+        ? {
+            run: {
+                command: 'npx',
+                args: ['@blackbyte/sugarcss-lsp-server'],
+                transport: node_1.TransportKind.stdio,
+            },
+            debug: {
+                command: 'npx',
+                args: ['@blackbyte/sugarcss-lsp-server'],
+                transport: node_1.TransportKind.stdio,
+            },
+        }
+        : {
+            run: { module: serverModule, transport: node_1.TransportKind.ipc },
+            debug: {
+                module: serverModule,
+                transport: node_1.TransportKind.ipc,
+                options: { execArgv: ['--nolazy', '--inspect=6009'] },
+            },
+        };
     // Options to control the language client
     const clientOptions = {
         // Register the server for CSS documents

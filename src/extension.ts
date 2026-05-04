@@ -9,21 +9,43 @@ import {
 let client: LanguageClient;
 
 export function activate(context: ExtensionContext) {
-  // The server is implemented in node
-  const serverModule = require.resolve(
-    '@blackbyte/sugarcss-lsp-server/out/server.js',
-  );
+  // Try to find the server module in different locations
+  let serverModule: string;
+
+  try {
+    // First try to find it in the development environment (monorepo)
+    serverModule = require.resolve(
+      '@blackbyte/sugarcss-lsp-server/out/server.js',
+    );
+  } catch (error) {
+    // If not found, try to use npx to run it (for published extension)
+    serverModule = 'npx';
+  }
 
   // If the extension is launched in debug mode then the debug server options are used
   // Otherwise the run options are used
-  const serverOptions: ServerOptions = {
-    run: { module: serverModule, transport: TransportKind.ipc },
-    debug: {
-      module: serverModule,
-      transport: TransportKind.ipc,
-      options: { execArgv: ['--nolazy', '--inspect=6009'] },
-    },
-  };
+  const serverOptions: ServerOptions =
+    serverModule === 'npx'
+      ? {
+          run: {
+            command: 'npx',
+            args: ['@blackbyte/sugarcss-lsp-server'],
+            transport: TransportKind.stdio,
+          },
+          debug: {
+            command: 'npx',
+            args: ['@blackbyte/sugarcss-lsp-server'],
+            transport: TransportKind.stdio,
+          },
+        }
+      : {
+          run: { module: serverModule, transport: TransportKind.ipc },
+          debug: {
+            module: serverModule,
+            transport: TransportKind.ipc,
+            options: { execArgv: ['--nolazy', '--inspect=6009'] },
+          },
+        };
 
   // Options to control the language client
   const clientOptions: LanguageClientOptions = {
